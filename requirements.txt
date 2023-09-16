@@ -1,0 +1,6 @@
+fastapi[all]
+SQLAlchemy
+databases
+aiosqlite
+aiofiles
+jinja2
