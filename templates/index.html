@@ -5,16 +5,107 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Textboard</title>
+    <style>
+        .hidden {
+            display: none;
+        }
+    </style>
+    <script>
+        async function sendPostRequest(e) {
+            e.preventDefault();
+            const content = document.getElementById("content").value;
+            const data = {
+                "content": content
+            };
+
+            try {
+                const response = await fetch('/post/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (response.ok) {
+                    const responseData = await response.json();
+                    console.log('Success:', responseData);
+                    // Refresh the page after successful request
+                    location.reload(); 
+                } else {
+                    console.error('Error: ', response.statusText);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+
+            return false;
+        }
+        async function sendReplyRequest(e, i) {
+            e.preventDefault();
+            const content = document.getElementById("reply_content_" + i).value;
+            const data = {
+                "content": content
+            };
+
+            try {
+                const response = await fetch('/post/' + i + '/reply', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (response.ok) {
+                    const responseData = await response.json();
+                    console.log('Success:', responseData);
+                    // Refresh the page after successful request
+                    location.reload(); 
+                } else {
+                    console.error('Error: ', response.statusText);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+
+            return false;
+        }
+        function showForm(i, show_mode=true) {
+            let form = document.getElementById('reply_form_' + i);
+            let reply_button = document.getElementById('reply_button_' + i);
+            let hide_button = document.getElementById('reply_button_' + i + '_hide');
+            if (show_mode) {
+                form.classList.remove('hidden');
+                hide_button.classList.remove('hidden');
+                reply_button.classList.add('hidden');
+            } else {
+                form.classList.add('hidden');
+                hide_button.classList.add('hidden');
+                reply_button.classList.remove('hidden');
+            }
+        }
+    </script>
 </head>
 <body>
     <h1>Posts</h1>
+    <form onsubmit="return sendPostRequest(event)">
+        <label for="content">Post content:</label>
+        <input type="text" id="content" name="content">
+        <button type="submit">Send</button>
+    </form>
     {% for post in posts %}
         <div>
-            <p><strong>{{ post.id }}: {{ post.content }}</strong></p>
+            <p><strong><small>{{ post.id }}</small>: {{ post.content }}</strong> <button onclick="showForm({{ post.id }})" id="reply_button_{{ post.id }}">Reply</button></p>
+            <form onsubmit="return sendReplyRequest(event, {{ post.id }})" id="reply_form_{{ post.id }}" class="hidden">
+                <input type="text" id="reply_content_{{ post.id }}" name="reply_content_{{ post.id }}">
+                <button type="submit">Reply</button>
+            </form>
+            <button onclick="showForm({{ post.id }}, false)" id="reply_button_{{ post.id }}_hide" class="hidden">Cancel</button>
             {% if post.replies|length > 0 %}
-                <ul>
+                <ul style="list-style-type: none;">
                     {% for reply in post.replies %}
-                        <li>{{ reply.id }}: {{ reply.content }}</li>
+                        <li><small>{{ reply.id }}</small>: {{ reply.content }}</li>
                     {% endfor %}
                 </ul>
             {% endif %}
